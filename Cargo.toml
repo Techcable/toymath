@@ -1,0 +1,10 @@
+[package]
+name = "toymath"
+version = "0.1.0"
+authors = ["Techcable <Techcable@techcable.net>"]
+# It's a toy and probably isn't very correct
+publish = false
+
+[dependencies]
+quickcheck = "0.6"
+quickcheck_macros = "0.6"
