@@ -8,3 +8,11 @@ publish = false
 [dependencies]
 quickcheck = "0.6"
 quickcheck_macros = "0.6"
+
+[dev-dependencies]
+criterion = { version = "0.2", features = ["real_blackbox"] }
+num = "^0.2"
+
+[[bench]]
+name = "sqrt"
+harness = false

@@ -1,4 +1,7 @@
+
+
 #[inline]
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn assert_nearly_equals(first: f64, second: f64, allowed_error: f64) {
     assert!(
         nearly_equals(first, second, allowed_error),
@@ -6,6 +9,7 @@ pub fn assert_nearly_equals(first: f64, second: f64, allowed_error: f64) {
     );
 }
 #[inline]
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn nearly_equals(first: f64, second: f64, allowed_error: f64) -> bool {
     (first - second).abs() <= allowed_error
 }
