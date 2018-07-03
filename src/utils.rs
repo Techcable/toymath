@@ -5,7 +5,8 @@
 pub fn assert_nearly_equals(first: f64, second: f64, allowed_error: f64) {
     assert!(
         nearly_equals(first, second, allowed_error),
-        "assertion failed `(left == right)`,\nleft: `{}`,\nright: `{}`"
+        "assertion failed `(left == right)`,\nleft: `{}`,\nright: `{}`",
+        first, second
     );
 }
 #[inline]
@@ -14,6 +15,7 @@ pub fn nearly_equals(first: f64, second: f64, allowed_error: f64) -> bool {
     (first - second).abs() <= allowed_error
 }
 /// Returns the mantissa, exponent and sign as integers.
+#[allow(dead_code)]
 pub fn float_decode(target: f64) -> (u64, i16, i8) {
     // Copied from stdlib
     let bits = target.to_bits();
@@ -28,6 +30,7 @@ pub fn float_decode(target: f64) -> (u64, i16, i8) {
     exponent -= 1023 + 52;
     (mantissa, exponent, sign)
 }
+#[allow(dead_code)]
 pub fn float_encode(target: (u64, i16, i8)) -> f64 {
     let mantissa = target.0;
     let mut exponent = target.1;

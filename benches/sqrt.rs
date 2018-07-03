@@ -8,7 +8,6 @@ use std::time::Duration;
 use std::f64::consts::PI;
 
 use criterion::{Criterion, ParameterizedBenchmark, Fun};
-use num::range_step_inclusive;
 
 use toymath::sqrt;
 

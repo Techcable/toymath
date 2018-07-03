@@ -1,6 +1,5 @@
 use std::f64::NAN;
 use std::num::FpCategory;
-use utils::{float_encode, float_decode};
 
 #[inline]
 pub fn approximate_sqrt(target: f64) -> f64 {
@@ -12,9 +11,13 @@ pub fn approximate_sqrt(target: f64) -> f64 {
      * since it needs a good initial estimate.
      * This is very similar reasoning to the Quake fast reciprocal sqrt,
      * although slightly less complicated since we don't have to take the approximate reciprocal.
+     *
+     * See http://bits.stephan-brumme.com/squareRoot.html for details
      */
-    let (mantissa, exponent, sign) = float_decode(target);
-    float_encode((mantissa, exponent / 2, sign))
+    let mut bits = target.to_bits();
+    bits += 1023 << 52;
+    bits >>= 1;
+    f64::from_bits(bits)
 }
 
 pub fn sqrt(target: f64) -> f64 {
@@ -36,19 +39,18 @@ pub fn sqrt(target: f64) -> f64 {
      * Newton's Method is actually the most efficient
      * way to compute the sqrt
      * as it converges quadratically.
-     * However, we still have to do this iteratively until the estimates aren't getting any better
+     * However, we still have to do this iteratively three times
+     * in order to correct the approximate sqrt we got above.
      * No wonder it's such a slow operation!
      */
     let initial_estimate = approximate_sqrt(target);
     let mut last = initial_estimate;
     const HALF: f64 = 1.0/2.0;
-    loop {
+    for _ in 0..3 {
         let current = HALF * (last + target / last);
-        if current == last {
-            return current;
-        }
         last = current;
     }
+    last
 }
 
 #[cfg(test)]
