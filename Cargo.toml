@@ -8,9 +8,11 @@ publish = false
 [dependencies]
 quickcheck = "0.6"
 quickcheck_macros = "0.6"
+lazy_static = "1"
 
 [dev-dependencies]
 criterion = { version = "0.2", features = ["real_blackbox"] }
+ordered-float = "^0.5.0"
 num = "^0.2"
 
 [[bench]]

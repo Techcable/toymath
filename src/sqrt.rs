@@ -56,17 +56,17 @@ pub fn sqrt(target: f64) -> f64 {
 #[cfg(test)]
 mod test {
     use super::sqrt;
-    use utils::{assert_nearly_equals, nearly_equals};
+    use utils::NearlyEquals;
     const ALLOWED_ERROR: f64 = 1e-10;
     #[test]
     fn basic() {
-        assert_nearly_equals(sqrt(18.0), 18.0f64.sqrt(), ALLOWED_ERROR)
+        assert_nearly_equals!(sqrt(18.0), 18.0f64.sqrt(), ALLOWED_ERROR)
     }
 
     #[quickcheck]
     fn sqrt_matches_std(target: f64) -> bool {
         if target.is_sign_positive() {
-            nearly_equals(sqrt(target), target.sqrt(), ALLOWED_ERROR)
+            sqrt(target).nearly_equals(target.sqrt(), ALLOWED_ERROR)
         } else {
             true
         }

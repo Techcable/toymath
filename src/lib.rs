@@ -1,8 +1,15 @@
-#![feature(plugin)]
+#![feature(plugin, const_fn)]
 #![plugin(quickcheck_macros)]
+#[cfg(test)]
 extern crate quickcheck;
 
-mod sqrt;
-mod utils;
+#[macro_use]
+extern crate lazy_static;
+extern crate ordered_float;
 
-pub use self::sqrt::sqrt;
+#[macro_use]
+mod utils;
+mod sqrt;
+mod trig;
+
+pub use self::sqrt::{approximate_sqrt, sqrt};

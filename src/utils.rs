@@ -1,19 +1,53 @@
-
-
-#[inline]
-#[cfg_attr(not(test), allow(dead_code))]
-pub fn assert_nearly_equals(first: f64, second: f64, allowed_error: f64) {
-    assert!(
-        nearly_equals(first, second, allowed_error),
-        "assertion failed `(left == right)`,\nleft: `{}`,\nright: `{}`",
-        first, second
-    );
+macro_rules! assert_nearly_equals {
+    ($left:expr, $right:expr, $threshold:expr) => ({
+        match ($left, $right) {
+            (left_val, right_val) => {
+                if !left_val.nearly_equals(right_val, $threshold) {
+                    panic!(r#"assertion failed: `(left == right)`
+  left: `{:?}`,
+ right: `{:?}`"#, left_val, right_val)
+                }
+            }
+        }
+    });
+    ($left:expr, $right:expr, $threshold:expr,) => (assert_nearly_equals($left, $right, $threshold));
+    ($left:expr, $right:expr, $threshold:expr, $($arg:tt)+) => ({
+        match ($left, $right) {
+            (left_val, right_val) => {
+                if !left_val.nearly_equals(right_val, $threshold) {
+                    panic!(r#"assertion failed: `(left == right)`
+  left: `{:?}`,
+ right: `{:?}`: {}"#, left_val, right_val, format_args!($($arg)+))
+                }
+            }
+        }
+    })
 }
-#[inline]
+
 #[cfg_attr(not(test), allow(dead_code))]
-pub fn nearly_equals(first: f64, second: f64, allowed_error: f64) -> bool {
-    (first - second).abs() <= allowed_error
+pub trait NearlyEquals<T>: Sized {
+    fn nearly_equals(self, other: Self, threshold: T) -> bool;
 }
+impl NearlyEquals<f64> for f64 {
+    #[inline]
+    fn nearly_equals(self, other: Self, threshold: f64) -> bool {
+        (self - other).abs() <= threshold
+    }
+}
+impl<T: Clone, A: NearlyEquals<T>, B: NearlyEquals<T>> NearlyEquals<T> for (A, B) {
+    #[inline]
+    fn nearly_equals(self, other: Self, threshold: T) -> bool {
+        self.0.nearly_equals(other.0, threshold.clone()) &&
+            self.1.nearly_equals(other.1, threshold)
+    }
+}
+impl<'a, T, A: NearlyEquals<T> + Clone + 'a> NearlyEquals<T> for &'a A {
+    #[inline]
+    fn nearly_equals(self, other: &'a A, threshold: T) -> bool {
+        (*self).clone().nearly_equals((*other).clone(), threshold)
+    }
+}
+
 /// Returns the mantissa, exponent and sign as integers.
 #[allow(dead_code)]
 pub fn float_decode(target: f64) -> (u64, i16, i8) {
