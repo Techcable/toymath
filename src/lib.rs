@@ -1,4 +1,4 @@
-#![feature(plugin, const_fn)]
+#![feature(plugin, const_fn, proc_macro, proc_macro_non_items)]
 #![plugin(quickcheck_macros)]
 #[cfg(test)]
 extern crate quickcheck;
@@ -6,10 +6,14 @@ extern crate quickcheck;
 #[macro_use]
 extern crate lazy_static;
 extern crate ordered_float;
+extern crate num_traits;
+extern crate extended_float;
+extern crate extended_float_macros;
 
 #[macro_use]
 mod utils;
 mod sqrt;
 mod trig;
 
+pub use self::trig::{sin, sin_cos, cos};
 pub use self::sqrt::{approximate_sqrt, sqrt};

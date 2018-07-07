@@ -1,11 +1,44 @@
+use extended_float::ExtendedFloat;
+
+use num_traits::Float;
+
+
+#[cfg_attr(not(test), allow(unused_macros))]
+macro_rules! assert_eq_precise {
+    ($left:expr, $right:expr) => ({
+        match ($left, $right) {
+            (left_val, right_val) => {
+                if left_val != right_val {
+                    panic!(r#"assertion failed: `(left == right)`
+  left: `{:.20?}`,
+ right: `{:.20?}`"#, left_val, right_val)
+                }
+            }
+        }
+    });
+    ($left:expr, $right:expr,) => (assert_eq_precise!($left, $right));
+    ($left:expr, $right:expr,$($arg:tt)+) => ({
+        match ($left, $right) {
+            (left_val, right_val) => {
+                if left_val != right_val {
+                    panic!(r#"assertion failed: `(left == right)`
+  left: `{:.20?}`,
+ right: `{:.20?}`: {}"#, left_val, right_val, format_args!($($arg)+))
+                }
+            }
+        }
+    })
+}
+
+#[cfg_attr(not(test), allow(unused_macros))]
 macro_rules! assert_nearly_equals {
     ($left:expr, $right:expr, $threshold:expr) => ({
         match ($left, $right) {
             (left_val, right_val) => {
                 if !left_val.nearly_equals(right_val, $threshold) {
                     panic!(r#"assertion failed: `(left == right)`
-  left: `{:?}`,
- right: `{:?}`"#, left_val, right_val)
+  left: `{:.20?}`,
+ right: `{:.20?}`"#, left_val, right_val)
                 }
             }
         }
@@ -16,8 +49,8 @@ macro_rules! assert_nearly_equals {
             (left_val, right_val) => {
                 if !left_val.nearly_equals(right_val, $threshold) {
                     panic!(r#"assertion failed: `(left == right)`
-  left: `{:?}`,
- right: `{:?}`: {}"#, left_val, right_val, format_args!($($arg)+))
+  left: `{:.20?}`,
+ right: `{:.20?}`: {}"#, left_val, right_val, format_args!($($arg)+))
                 }
             }
         }
@@ -31,6 +64,12 @@ pub trait NearlyEquals<T>: Sized {
 impl NearlyEquals<f64> for f64 {
     #[inline]
     fn nearly_equals(self, other: Self, threshold: f64) -> bool {
+        (self - other).abs() <= threshold
+    }
+}
+impl NearlyEquals<ExtendedFloat> for ExtendedFloat {
+    #[inline]
+    fn nearly_equals(self, other: Self, threshold: ExtendedFloat) -> bool {
         (self - other).abs() <= threshold
     }
 }

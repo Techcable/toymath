@@ -1,36 +1,36 @@
 //! Basic trigonometric functions
-use std::f64::consts::{PI, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_1_SQRT_2};
-use std::f64::NAN;
-
+use extended_float::consts::{PI, FRAC_PI_2, FRAC_PI_3, FRAC_PI_4, FRAC_PI_6, FRAC_1_SQRT_2};
+use extended_float::{ExtendedFloat};
 use ordered_float::{NotNaN, OrderedFloat};
 use utils::NearlyEquals;
+use num_traits::Float;
+use std::fmt::{self, Debug, Formatter};
+
+use extended_float_macros::extended_float;
 
 /// Gives the value of `sqrt(2)/2`
 ///
 /// This is approximiately equal to `1/sqrt(2)` by the identity
 /// `1/sqrt(2) = 1/sqrt(2) * sqrt(2)/sqrt(2) = sqrt(2)/2`
-const FRAC_SQRT_2_2: f64 = FRAC_1_SQRT_2;
-/// Approximately equal to `sqrt(3)`
-const SQRT_3: f64 = 1.7320508075688772;
+const FRAC_SQRT_2_2: ExtendedFloat = FRAC_1_SQRT_2;
 /// The approximate value of `sqrt(3) / 2`
-const FRAC_SQRT_3_2: f64 = SQRT_3 / 2.0;
+const FRAC_SQRT_3_2: ExtendedFloat = extended_float!("0.8660254037844386467637231707529361834714026269051903140279034897259665");
 
-
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 struct KnownAngle {
-    degree: f64,
-    sin: f64,
-    cos: f64
+    degree: ExtendedFloat,
+    sin: ExtendedFloat,
+    cos: ExtendedFloat
 }
 impl KnownAngle {
     #[cfg(test)]
     /// For testing purposes, determine what the stdlib claims the known angle is
-    pub fn stdlib(degree: f64) -> KnownAngle {
+    pub fn stdlib(degree: ExtendedFloat) -> KnownAngle {
         let (sin, cos) = degree.sin_cos();
         KnownAngle { degree, sin, cos }
     }
     #[inline]
-    pub const fn new(degree: f64, sin: f64, cos: f64) -> KnownAngle {
+    pub const fn new(degree: ExtendedFloat, sin: ExtendedFloat, cos: ExtendedFloat) -> KnownAngle {
         KnownAngle { degree, sin, cos }
     }
     #[inline]
@@ -90,22 +90,40 @@ impl KnownAngle {
          * cos(1/2u) = sqrt(1/2(1 + cos(u)))
          */
         KnownAngle {
-            degree: self.degree * 0.5,
-            sin: (0.5 * (1.0 - self.cos)).sqrt(),
-            cos: (0.5 * (1.0 + self.cos)).sqrt(),
+            degree: self.degree * extended_float!(0.5),
+            sin: (extended_float!(0.5) * (extended_float!(1.0) - self.cos)).sqrt(),
+            cos: (extended_float!(0.5) * (extended_float!(1.0) + self.cos)).sqrt(),
         }
     }
 }
-impl NearlyEquals<f64> for KnownAngle {
+impl NearlyEquals<ExtendedFloat> for KnownAngle {
     #[inline]
-    fn nearly_equals(self, other: Self, threshold: f64) -> bool {
+    fn nearly_equals(self, other: Self, threshold: ExtendedFloat) -> bool {
         self.degree.nearly_equals(other.degree, threshold) &&
         self.sin.nearly_equals(other.sin, threshold) &&
             self.cos.nearly_equals(other.cos, threshold)
     }
 }
+impl Debug for KnownAngle {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        // NOTE: We need to preserve precision
+        if let Some(precision) = f.precision() {
+            f.debug_struct("KnownAngle")
+                .field("degree", &format_args!("{:.*}", precision, self.degree))
+                .field("sin", &format_args!("{:.*}", precision, self.sin))
+                .field("cos", &format_args!("{:.*}", precision, self.cos))
+                .finish()
+        } else {
+            f.debug_struct("KnownAngle")
+                .field("degree", &self.degree)
+                .field("sin", &self.sin)
+                .field("cos", &self.cos)
+                .finish()
+        }
+    }
+}
 
-const ERROR_THRESHOLD: f64 = 1e-20;
+const ERROR_THRESHOLD: ExtendedFloat = extended_float!("1e-20");
 /// The values in the unit circle as a tuple of radian degree,
 /// sine value, and cosine value
 ///
@@ -113,17 +131,17 @@ const ERROR_THRESHOLD: f64 = 1e-20;
 /// most of the values are actually approximations.
 //noinspection RsApproxConstant
 const UNIT_CIRCLE: &[KnownAngle] = &[
-    KnownAngle::new(0.0, 0.0, 1.0),
-    KnownAngle::new(FRAC_PI_6, 0.5, FRAC_SQRT_3_2),
-    KnownAngle::new(FRAC_PI_4, 0.7071067811865475, FRAC_SQRT_2_2),
-    KnownAngle::new(FRAC_PI_3, 0.8660254037844387, 0.4999999999999999),
-    KnownAngle::new(FRAC_PI_2, 1.0, 0.00000000000000006123233995736766)
+    KnownAngle::new(extended_float!(0), extended_float!(0), extended_float!(1)),
+    KnownAngle::new(FRAC_PI_6, extended_float!(0.5), FRAC_SQRT_3_2),
+    KnownAngle::new(FRAC_PI_4, FRAC_SQRT_2_2, FRAC_SQRT_2_2),
+    KnownAngle::new(FRAC_PI_3, FRAC_SQRT_3_2, extended_float!(0.5)),
+    KnownAngle::new(FRAC_PI_2, extended_float!(1), extended_float!(0))
 ];
-fn find_unit_circle(expected: f64) -> KnownAngle {
+fn find_unit_circle(expected: ExtendedFloat) -> KnownAngle {
     *UNIT_CIRCLE.iter().find(|angle| angle.degree == expected).unwrap()
 }
 
-const HALF_TABLE_CUTOFF: f64 = ERROR_THRESHOLD;
+const HALF_TABLE_CUTOFF: ExtendedFloat = ERROR_THRESHOLD;
 lazy_static! {
     /// A precomputed values for all the half angles values of ``
     /// This is sorted by radian value,
@@ -146,7 +164,7 @@ fn compute_half_table() -> Vec<KnownAngle> {
         }
     }
     result.sort_unstable_by_key(|&angle| NotNaN::new(angle.degree).unwrap());
-    eprintln!("Table {:#?}", result);
+    //eprintln!("Table {:#?}", result);
     result
 }
 /// Returns a tuple of the sine and cosine
@@ -165,22 +183,31 @@ pub fn sin_cos(x: f64) -> (f64, f64) {
      * Furthermore, since it's periodic and symmetric about pi/2 we can also
      * eliminate all the positive values past `pi/2` as well.
      */
+    let mut x: ExtendedFloat = From::from(x);
+    let mut neg_sin = false;
+    let mut neg_cos = false;
     if !x.is_finite() {
-        return (NAN, NAN);
-    } else if x < 0.0 {
-        let (sin, cos) = sin_cos(-x);
-        return (-sin, cos);
-    } else if x >= (PI * 2.0) {
-        return sin_cos(x % (PI * 2.0));
-    } else if x >= PI {
-        debug_assert!(x - PI < PI);
-        let (sin, cos) = sin_cos(x - PI);
-        return (-sin, cos)
-    } else if x >= FRAC_PI_2 {
-        debug_assert!(x < PI);
-        let (sin, cos) = sin_cos(PI - x);
-        return (sin, -cos)
+        return (f64::nan(), f64::nan());
     }
+    if x.is_sign_negative() {
+        x = -x;
+        neg_sin = !neg_sin;
+    }
+    debug_assert!(x >= extended_float!(0));
+    if x >= (PI * extended_float!(2)) {
+        x %= PI * extended_float!(2);
+    }
+    debug_assert!(x - PI < PI);
+    if x >= PI {
+        x -= PI;
+        neg_sin = !neg_sin;
+    }
+    debug_assert!(x < PI);
+    if x >= FRAC_PI_2 {
+        x = PI - x;
+        neg_cos = !neg_cos;
+    }
+    debug_assert!(x < FRAC_PI_2);
     // First, start with the closest unit circle approximation
     let mut angle = *UNIT_CIRCLE.iter()
         .min_by_key(|&&angle| OrderedFloat((angle.degree - x).abs()))
@@ -226,7 +253,13 @@ pub fn sin_cos(x: f64) -> (f64, f64) {
         (x - angle.degree).abs() < ERROR_THRESHOLD,
         "Invalid approx {:?} for {}", angle, x
     );
-    (angle.sin, angle.cos)
+    if neg_sin {
+        angle.sin = -angle.sin;
+    }
+    if neg_cos {
+        angle.cos = -angle.cos;
+    }
+    (f64::from(angle.sin), f64::from(angle.cos))
 }
 
 #[inline]
@@ -241,24 +274,28 @@ pub fn cos(x: f64) -> f64 {
 
 #[cfg(test)]
 mod test {
-    use std::f64::consts::FRAC_PI_4;
+    use extended_float::consts::FRAC_PI_4;
     use super::{KnownAngle, find_unit_circle, sin, cos, sin_cos, HALF_TABLE, UNIT_CIRCLE};
     use utils::NearlyEquals;
-    const ALLOWED_ERROR: f64 = 1e-20;
+    use num_traits::Float;
+    use extended_float::ExtendedFloat;
+    use extended_float_macros::extended_float;
+    const ALLOWED_ERROR: ExtendedFloat = extended_float!("1e-5");
     #[test]
     fn half_angle() {
-        assert_eq!(
+        assert_nearly_equals!(
             find_unit_circle(FRAC_PI_4).half_angle(),
-            KnownAngle::stdlib(FRAC_PI_4 / 2.0)
+            KnownAngle::stdlib(FRAC_PI_4 / extended_float!(2)),
+            ALLOWED_ERROR
         );
     }
     #[test]
-    #[ignore]
     fn half_table() {
         for &angle in UNIT_CIRCLE {
-            assert_eq!(
+            assert_nearly_equals!(
                 (angle.sin, angle.cos),
                 angle.degree.sin_cos(),
+                ALLOWED_ERROR,
                 "Invalid unit circle: {}", angle.degree
             )
         }
@@ -273,22 +310,19 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn basic() {
         assert_eq!(sin(0.0), 0.0);
         assert_eq!(cos(0.0), 1.0);
-        assert_nearly_equals!(
+        assert_eq_precise!(
             sin_cos(1.0),
             (1.0f64).sin_cos(),
-            ALLOWED_ERROR
         );
     }
 
     #[quickcheck]
-    #[ignore]
     fn matches_std(target: f64) -> bool {
         if target.is_sign_positive() {
-            sin_cos(target).nearly_equals(target.sin_cos(), ALLOWED_ERROR)
+            sin_cos(target) == target.sin_cos()
         } else {
             true
         }
