@@ -1,0 +1,17 @@
+[package]
+name = "toydecimal"
+version = "0.1.0"
+authors = ["Techcable <Techcable@techcable.net>"]
+# It's a toy and probably isn't very correct
+publish = false
+
+[lib]
+
+[dependencies]
+quickcheck = "0.6"
+quickcheck_macros = "0.6"
+memchr = "^2"
+itertools = "^0.7"
+num-bigint = "0.2"
+num-traits = "0.2"
+
