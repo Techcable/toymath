@@ -21,3 +21,7 @@ num = "^0.2"
 [[bench]]
 name = "sqrt"
 harness = false
+
+[[bench]]
+name = "trig"
+harness = false
