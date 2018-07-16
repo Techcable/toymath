@@ -7,8 +7,7 @@ extern crate quickcheck;
 extern crate lazy_static;
 extern crate ordered_float;
 extern crate num_traits;
-extern crate extended_float;
-extern crate extended_float_macros;
+extern crate rug;
 
 #[macro_use]
 mod utils;

@@ -1,8 +1,3 @@
-use extended_float::ExtendedFloat;
-
-use num_traits::Float;
-
-
 #[cfg_attr(not(test), allow(unused_macros))]
 macro_rules! assert_eq_precise {
     ($left:expr, $right:expr) => ({
@@ -33,7 +28,7 @@ macro_rules! assert_eq_precise {
 #[cfg_attr(not(test), allow(unused_macros))]
 macro_rules! assert_nearly_equals {
     ($left:expr, $right:expr, $threshold:expr) => ({
-        match ($left, $right) {
+        match (&$left, &$right) {
             (left_val, right_val) => {
                 if !left_val.nearly_equals(right_val, $threshold) {
                     panic!(r#"assertion failed: `(left == right)`
@@ -45,7 +40,7 @@ macro_rules! assert_nearly_equals {
     });
     ($left:expr, $right:expr, $threshold:expr,) => (assert_nearly_equals($left, $right, $threshold));
     ($left:expr, $right:expr, $threshold:expr, $($arg:tt)+) => ({
-        match ($left, $right) {
+        match (&$left, &$right) {
             (left_val, right_val) => {
                 if !left_val.nearly_equals(right_val, $threshold) {
                     panic!(r#"assertion failed: `(left == right)`
@@ -67,9 +62,8 @@ impl NearlyEquals<f64> for f64 {
         (self - other).abs() <= threshold
     }
 }
-impl NearlyEquals<ExtendedFloat> for ExtendedFloat {
-    #[inline]
-    fn nearly_equals(self, other: Self, threshold: ExtendedFloat) -> bool {
+impl NearlyEquals<::rug::Float> for ::rug::Float {
+    fn nearly_equals(self, other: Self, threshold: ::rug::Float) -> bool {
         (self - other).abs() <= threshold
     }
 }
