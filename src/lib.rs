@@ -13,6 +13,7 @@ extern crate rug;
 mod utils;
 mod sqrt;
 mod trig;
+mod pow;
 
 pub use self::trig::{sin, sin_cos, cos};
 pub use self::sqrt::{approximate_sqrt, sqrt};
