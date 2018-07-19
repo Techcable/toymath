@@ -25,6 +25,21 @@ macro_rules! assert_eq_precise {
     })
 }
 
+
+#[cfg_attr(not(test), allow(unused_macros))]
+macro_rules! debug_assert_nearly_equals {
+    ($left:expr, $right:expr, $threshold:expr) => {
+        if cfg!(debug_assertions) {
+            assert_nearly_equals!($left, $right, $threshold);
+        }
+    };
+    ($left:expr, $right:expr, $threshold:expr, $($arg:tt)+) => {
+        if cfg!(debug_assertions) {
+            assert_nearly_equals!($left, $right, $threshold, $($arg)*);
+        }
+    }
+}
+
 #[cfg_attr(not(test), allow(unused_macros))]
 macro_rules! assert_nearly_equals {
     ($left:expr, $right:expr, $threshold:expr) => ({
@@ -40,6 +55,7 @@ macro_rules! assert_nearly_equals {
     });
     ($left:expr, $right:expr, $threshold:expr,) => (assert_nearly_equals($left, $right, $threshold));
     ($left:expr, $right:expr, $threshold:expr, $($arg:tt)+) => ({
+        use utils::NearlyEquals;
         match (&$left, &$right) {
             (left_val, right_val) => {
                 if !left_val.nearly_equals(right_val, $threshold) {

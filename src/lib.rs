@@ -14,6 +14,8 @@ mod utils;
 mod sqrt;
 mod trig;
 mod pow;
+mod log;
 
 pub use self::trig::{sin, sin_cos, cos};
 pub use self::sqrt::{approximate_sqrt, sqrt};
+pub use self::log::{log, log2, log10, ln};
