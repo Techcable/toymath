@@ -1,4 +1,4 @@
-#![feature(plugin, const_fn, proc_macro, proc_macro_non_items)]
+#![feature(plugin, const_fn, proc_macro, proc_macro_hygiene)]
 #![plugin(quickcheck_macros)]
 #[cfg(test)]
 extern crate quickcheck;

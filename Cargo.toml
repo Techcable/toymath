@@ -6,8 +6,8 @@ authors = ["Techcable <Techcable@techcable.net>"]
 publish = false
 
 [dependencies]
-quickcheck = "0.6"
-quickcheck_macros = "0.6"
+quickcheck = "0.7"
+quickcheck_macros = "0.7"
 lazy_static = "1"
 num-traits = "0.2"
 ordered-float = "0.5"
